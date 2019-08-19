@@ -14,6 +14,12 @@ class Pokemon < ApplicationRecord
         end
     end
 
+    def types
+        [self.face_type, self.body_type].compact
+    end
+
+
+
     def self.X_parents(generation, pokemon)
         parents = [pokemon.mother, pokemon.father].compact
         if generation == 1
@@ -43,6 +49,9 @@ class Pokemon < ApplicationRecord
         end
     end
 
+
+    # PokeApi Info
+
     def self.speciesInfo(species_id)
 
         pokemon_call = PokeApi.get(pokemon: species_id)
@@ -50,13 +59,26 @@ class Pokemon < ApplicationRecord
         evolution_call = PokeApi.get(evolution_chain: species_call.evolution_chain.url.split("/").last.to_i)
     
         evolution_data = self.find_in_evo_chain(pokemon_call.species.name, [evolution_call.chain])
+
+        if species_call.growth_rate.name == "slow"
+            rate_number = 0.25
+        elsif species_call.growth_rate.name == "medium-slow"
+            rate_number = 0.5
+        elsif species_call.growth_rate.name == "medium"
+            rate_number = 0.75
+        else
+            rate_number = 1
+        end
+
+
+
         {
             name: pokemon_call.species.name,
             base_stats: pokemon_call.stats.each_with_object({}){|stat, hash| hash[stat.stat.name] = stat.base_stat},
             types: pokemon_call.types.sort_by{|type| type.slot}.map{|type| type.type.name},
             capture_rate: species_call.capture_rate,
             evolutions: evolution_data.evolves_to.map{|datum| {to_id: datum.species.url.split("/").last.to_i , level: self.extended_min_level(datum)}}.filter{|evo| evo[:to_id] < 152},
-            growth_rate: species_call.growth_rate.name,
+            growth_rate: rate_number,
             habitat: species_call.habitat.name
         }
     end
@@ -75,17 +97,36 @@ class Pokemon < ApplicationRecord
         end
     end
 
+
+
     def self.breed(mother, father, user_id)
 
-        # puts self.speciesInfo(mother.face_id)
-        # puts self.speciesInfo(mother.body_id)
-        # puts self.speciesInfo(father.face_id)
-        # puts self.speciesInfo(father.body_id)
+        # Determine Rough Kind of Resulting Pokemon
+
+        basis_face_id = self.chose_ancestor([mother, father].sample).face_id
+        basis_body_id = self.chose_ancestor([mother, father].sample).body_id
+
+        face_info = self.speciesInfo(basis_face_id)
+        body_info = self.speciesInfo(basis_body_id)
+
 
 
         # Determine Level
 
         baseline = (mother.level + father.level)/2
+
+        # Growth Factor
+
+        growth_ratio = (face_info[:growth_rate] + body_info[:growth_rate])/2
+
+        rando = rand
+
+        if growth_ratio > rando
+            ease_factor = 1
+        else
+            ease_factor = 0
+        end
+
 
         # Float from 0 to 1
         loyalty_ratio = (mother.loyalty + father.loyalty)/200.0
@@ -102,8 +143,6 @@ class Pokemon < ApplicationRecord
             loyalty_factor = 0
         end
 
-        
-
         mother_1 = self.X_parents(1, mother)
         mother_2 = mother_1.concat(self.X_parents(2, mother))
         mother_3 = mother_2.concat(self.X_parents(3, mother))
@@ -112,30 +151,55 @@ class Pokemon < ApplicationRecord
         father_2 = father_1.concat(self.X_parents(2, father))
         father_3 = father_2.concat(self.X_parents(3, father))
 
-
-        
-
-        
-
         if (mother_1 & father_1).any?
             incest_factor = 3
+            print "Super creepy"
         elsif (mother_2 & father_2).any?
             incest_factor = 2
+            print "Creepy"
         elsif (mother_3 & father_3).any?
             incest_factor = 1
+            print "Still kinda creepy"
         else
             incest_factor = 0
+            print "No incest detected"
+        end
+
+        level = [baseline + ease_factor + loyalty_factor - incest_factor, 1].max
+
+
+        # Determine Face (accounting for possible evolution)
+
+        evolutions = face_info[:evolutions].select{|evo_datum| evo_datum[:level] <= level}
+
+        if evolutions.length > 0
+            face_id = evolutions.sample[:to_id]
+            face_info = self.speciesInfo(face_id)
+        else
+            face_id = basis_face_id
+        end
+
+        # Determine Body (accounting for possible evolution)
+
+        evolutions = body_info[:evolutions].select{|evo_datum| evo_datum[:level] <= level}
+
+        if evolutions.length > 0
+            body_id = evolutions.sample[:to_id]
+            body_info = self.speciesInfo(body_id)
+        else
+            body_id = basis_body_id
         end
 
 
+        # Determine Stats
 
-        # Determine Face
+        hp = ((face_info[:base_stats]["hp"] + body_info[:base_stats]["hp"]) * level / 100) + 10 + level
+        attack = ((face_info[:base_stats]["attack"] + body_info[:base_stats]["attack"]) * level / 100) + 5
+        defense = ((face_info[:base_stats]["defense"] + body_info[:base_stats]["defense"]) * level / 100) + 5
+        special_attack = ((face_info[:base_stats]["special-attack"] + body_info[:base_stats]["special-attack"]) * level / 100) + 5
+        special_defense = ((face_info[:base_stats]["special-defense"] + body_info[:base_stats]["special-defense"]) * level / 100) + 5
+        speed = ((face_info[:base_stats]["speed"] + body_info[:base_stats]["speed"]) * level / 100) + 5
 
-        face_id = self.chose_ancestor([mother, father].sample).face_id
-
-        # Determine Body
-
-        body_id = self.chose_ancestor([mother, father].sample).body_id
 
         # Get fusion data
 
@@ -143,36 +207,77 @@ class Pokemon < ApplicationRecord
         data = Nokogiri::HTML(response)
 
         self.create(
-            level: [baseline + loyalty_factor - incest_factor, 1].max,
+            level: level,
             name: data.css("#pk_name").text,
             image_url: data.css("#pk_img").attr("src"),
             face_id: face_id,
             body_id: body_id,
             mother_id: mother.id,
             father_id: father.id,
+            face_type: face_info[:types][0],
+            body_type: body_info[:types][0],
             gender: ["male", "female"].sample,
             user_id: user_id,
-            loyalty: 50
+            loyalty: 50,
+            hp: hp,
+            attack: attack,
+            defense: defense,
+            special_attack: special_attack,
+            special_defense: special_defense,
+            speed: speed
         )
-
     end
 
-    def self.test_breed
-        grouped = self.all.partition{|poke| poke.gender=="male"}
-        mother = grouped[1].sample
-        father = grouped[0].sample
-        self.breed(mother, father, 1)
+
+    def self.generate(face_id, body_id, level, user_id)
+
+        face_info = self.speciesInfo(face_id)
+        body_info = self.speciesInfo(body_id)
+
+        hp = ((face_info[:base_stats]["hp"] + body_info[:base_stats]["hp"]) * level / 100) + 10 + level
+        attack = ((face_info[:base_stats]["attack"] + body_info[:base_stats]["attack"]) * level / 100) + 5
+        defense = ((face_info[:base_stats]["defense"] + body_info[:base_stats]["defense"]) * level / 100) + 5
+        special_attack = ((face_info[:base_stats]["special-attack"] + body_info[:base_stats]["special-attack"]) * level / 100) + 5
+        special_defense = ((face_info[:base_stats]["special-defense"] + body_info[:base_stats]["special-defense"]) * level / 100) + 5
+        speed = ((face_info[:base_stats]["speed"] + body_info[:base_stats]["speed"]) * level / 100) + 5
+
+        # Get fusion data
+        response = HTTParty.get("https://pokemon.alexonsager.net/#{face_id}/#{body_id}")
+        data = Nokogiri::HTML(response)
+
+        self.create(
+            level: level,
+            name: data.css("#pk_name").text,
+            image_url: data.css("#pk_img").attr("src"),
+            face_id: face_id,
+            body_id: body_id,
+            face_type: face_info[:types][0],
+            body_type: body_info[:types][0],
+            mother_id: nil,
+            father_id: nil,
+            gender: ["male", "female"].sample,
+            user_id: user_id,
+            loyalty: 50,
+            hp: hp,
+            attack: attack,
+            defense: defense,
+            special_attack: special_attack,
+            special_defense: special_defense,
+            speed: speed
+        )
     end
 
-    def self.test
-        mother = Pokemon.all[302..Pokemon.all.length].select{|poke, index| poke.gender == "female"}.sample
+   
+    def self.random_poke
+        mother = Pokemon.all.select{|poke, index| poke.gender == "female"}.sample
         puts mother.image_url
-        puts mother.id
-        father = Pokemon.all[302..Pokemon.all.length].select{|poke, index| poke.gender == "male"}.sample
+        puts mother.level
+        father = Pokemon.all.select{|poke, index| poke.gender == "male"}.sample
         puts father.image_url
-        puts father.id
+        puts father.level
         new = self.breed(mother, father, 1)
         puts new.image_url
+        puts new.level
     end
 
 

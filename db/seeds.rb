@@ -9,12 +9,12 @@ User.destroy_all
 User.create(name:"Ash")
 User.create(name:"Brock")
 
-Pokemon.destroy_all
+# Pokemon.destroy_all
 
-(1..151).to_a.each do |index|
-    Pokemon.create(face_id: index, body_id: index, gender: "male", level: 1, loyalty: 50)
-end
+# (1..151).to_a.each do |index|
+#     Pokemon.create(face_id: index, body_id: index, gender: "male", level: 1, loyalty: 50)
+# end
 
-(1..151).to_a.each do |index|
-    Pokemon.create(face_id: index, body_id: index, gender: "female", level: 1, loyalty: 50)
-end
+# (1..151).to_a.each do |index|
+#     Pokemon.create(face_id: index, body_id: index, gender: "female", level: 1, loyalty: 50)
+# end
