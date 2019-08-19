@@ -6,6 +6,8 @@ class Pokemon < ApplicationRecord
     has_many :mothers_children, class_name: "Pokemon", foreign_key: :mother_id
     has_many :fathers_children, class_name: "Pokemon", foreign_key: :father_id
 
+    @@habitats = ["cave", "forest", "grassland", "mountain", "rough-terrain", "sea", "urban", "waters-edge", "rare"]
+
     def children
         if self.gender == "male"
             self.fathers_children
