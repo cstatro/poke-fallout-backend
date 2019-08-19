@@ -1,0 +1,19 @@
+# Read about fixtures at http://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  face_id: 1
+  body_id: 1
+  mother_id: 1
+  father_id: 1
+  gender: MyString
+  owner_id: 1
+
+two:
+  name: MyString
+  face_id: 1
+  body_id: 1
+  mother_id: 1
+  father_id: 1
+  gender: MyString
+  owner_id: 1
