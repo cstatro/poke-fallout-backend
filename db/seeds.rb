@@ -8,3 +8,12 @@
 User.destroy_all 
 User.create(name:"Ash")
 User.create(name:"Brock")
+
+
+(1..151).to_a.each do |index|
+    Pokemon.create(face_id: index, body_id: index, gender: "male")
+end
+
+(1..151).to_a.each do |index|
+    Pokemon.create(face_id: index, body_id: index, gender: "female")
+end
