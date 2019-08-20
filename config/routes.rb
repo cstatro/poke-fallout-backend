@@ -1,16 +1,13 @@
 Rails.application.routes.draw do
 
-  get 'users/:name', to: "users#show"
+  get "users/:name", to: "users#show"
 
   resources :wildmons
   resources :pokemons
   resources :users
-<<<<<<< HEAD
 
   
-=======
   get "/start-three/:id", to: "pokemons#start_three"
   get "/kill-rejects/:id/:keeper", to: "users#kill_rejects"
->>>>>>> initial-select
   # For details on the DSL available within this file, see http://guides.rubyonrails.org/routing.html
 end

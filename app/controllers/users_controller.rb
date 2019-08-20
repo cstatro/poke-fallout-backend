@@ -11,7 +11,7 @@ class UsersController < ApplicationController
 
     def create
         user = User.new(user_params)
-        user.update(name: name.downcase)
+        user.name = user.name.downcase
         user.save
         render json: UsersSerializer.new(user)   
     end
