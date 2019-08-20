@@ -6,7 +6,11 @@ class Pokemon < ApplicationRecord
     has_many :mothers_children, class_name: "Pokemon", foreign_key: :mother_id
     has_many :fathers_children, class_name: "Pokemon", foreign_key: :father_id
 
-    @@habitats = ["cave", "forest", "grassland", "mountain", "rough-terrain", "sea", "urban", "waters-edge", "rare"]
+
+
+
+
+
 
     def children
         if self.gender == "male"
@@ -55,11 +59,10 @@ class Pokemon < ApplicationRecord
     # PokeApi Info
 
     def self.speciesInfo(species_id)
-
         pokemon_call = PokeApi.get(pokemon: species_id)
         species_call = PokeApi.get(pokemon_species: species_id)
         evolution_call = PokeApi.get(evolution_chain: species_call.evolution_chain.url.split("/").last.to_i)
-    
+        
         evolution_data = self.find_in_evo_chain(pokemon_call.species.name, [evolution_call.chain])
 
         if species_call.growth_rate.name == "slow"
@@ -73,7 +76,7 @@ class Pokemon < ApplicationRecord
         end
 
 
-
+        
         {
             name: pokemon_call.species.name,
             base_stats: pokemon_call.stats.each_with_object({}){|stat, hash| hash[stat.stat.name] = stat.base_stat},
@@ -83,6 +86,7 @@ class Pokemon < ApplicationRecord
             growth_rate: rate_number,
             habitat: species_call.habitat.name
         }
+        
     end
 
 
@@ -232,7 +236,6 @@ class Pokemon < ApplicationRecord
 
 
     def self.generate(face_id, body_id, level, user_id)
-
         face_info = self.speciesInfo(face_id)
         body_info = self.speciesInfo(body_id)
 

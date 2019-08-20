@@ -1,0 +1,2 @@
+class WildmonsController < ApplicationController
+end

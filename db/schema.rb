@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_19_174039) do
+ActiveRecord::Schema.define(version: 2019_08_19_201555) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -45,6 +45,15 @@ ActiveRecord::Schema.define(version: 2019_08_19_174039) do
     t.integer "facility_tier", default: 1
     t.integer "authority", default: 100
     t.integer "facility_cleanliness", default: 100
+  end
+
+  create_table "wildmons", force: :cascade do |t|
+    t.integer "species_id"
+    t.string "habitat"
+    t.integer "minimum_level"
+    t.integer "capture_rate"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
   end
 
 end
