@@ -3,6 +3,13 @@ class UsersController < ApplicationController
         users = User.all
         render json: UsersSerializer.new(users)
     end
+
+    def show
+        user = User.find_by(name: params[:name].capitalize)
+
+        render json: UsersSerializer.new(user)
+    end
+
     def create
         user = User.new(user_params)
         user.save
