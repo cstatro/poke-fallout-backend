@@ -15,6 +15,21 @@ class UsersController < ApplicationController
         user.save
         render json: UsersSerializer.new(user)   
     end
+
+    def kill_rejects
+        keep = params[:keeper].to_i
+        user = User.find(params[:id])
+        user.pokemons.each do |p|
+            if p.id != keep
+                # byebug
+                p.alive = false
+                p.save
+            end
+        end
+         survivor = user.pokemons.find {|p| p.alive == true}
+         render json: PokemonsSerializer.new(survivor)
+    end
+
     private 
     def user_params
         params.require(:user).permit(:name)
