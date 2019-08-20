@@ -6,8 +6,8 @@
 #   movies = Movie.create([{ name: 'Star Wars' }, { name: 'Lord of the Rings' }])
 #   Character.create(name: 'Luke', movie: movies.first)
 User.destroy_all 
-User.create(name:"Ash")
-User.create(name:"Brock")
+User.create(name:"ash")
+User.create(name:"brock")
 
 # Pokemon.destroy_all
 
@@ -27,8 +27,6 @@ User.create(name:"Brock")
 # Create Wildmon
 
 
-
-
 def find_level_in_evo(poke_id, data)
 
     check = data.evolves_to.find{|evo| evo.species.url.split("/").last.to_i == poke_id}
@@ -45,9 +43,7 @@ def find_level_in_evo(poke_id, data)
 
 end
 
-
-
-
+Wildmon.destroy_all
 
 
 (1..151).to_a.each do |id|

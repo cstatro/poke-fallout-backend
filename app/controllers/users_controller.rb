@@ -5,13 +5,13 @@ class UsersController < ApplicationController
     end
 
     def show
-        user = User.find_by(name: params[:name].capitalize)
-
+        user = User.find_by(name: params[:name].downcase)
         render json: UsersSerializer.new(user)
     end
 
     def create
         user = User.new(user_params)
+        user.update(name: name.downcase)
         user.save
         render json: UsersSerializer.new(user)   
     end
