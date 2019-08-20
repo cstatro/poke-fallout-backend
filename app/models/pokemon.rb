@@ -274,6 +274,35 @@ class Pokemon < ApplicationRecord
         )
     end
 
+
+
+    def self.generate_wild(habitat, level, number, user_id)
+        possible = Wildmon.inhabitants_by_level(habitat, level)
+        capture_total = possible.inject(0.0){|total, value| total + value.capture_rate}
+
+        choices = []
+
+        (number * 2).times do
+            rando = rand
+            incrementor = 0
+            choices << possible.find do |inhabitant|
+                incrementor += inhabitant.capture_rate/capture_total
+                rando <= incrementor
+            end.species_id
+        end
+
+        choices.each_slice(2).map {|pair| self.generate(pair[0], pair[1], level, user_id)}
+
+    end
+
+    def self.generate_starters(user_id)
+        others = Wildmon.inhabitants_by_level("grassland", 5)
+        grass = [1, others.sample.species_id].shuffle
+        fire = [4, others.sample.species_id].shuffle
+        water = [7, others.sample.species_id].shuffle
+        [self.generate(grass[0], grass[1], 5, user_id), self.generate(fire[0], fire[1], 5, user_id), self.generate(water[0], water[1], 5, user_id)]
+    end
+
    
     def self.random_poke
         mother = Pokemon.all.select{|poke, index| poke.gender == "female"}.sample
