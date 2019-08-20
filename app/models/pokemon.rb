@@ -171,7 +171,7 @@ class Pokemon < ApplicationRecord
             print "No incest detected"
         end
 
-        level = [baseline + ease_factor + loyalty_factor - incest_factor, 1].max
+        level = [[baseline + ease_factor + loyalty_factor - incest_factor, 1].max, 99].min
 
 
         # Determine Face (accounting for possible evolution)
