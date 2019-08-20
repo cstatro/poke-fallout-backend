@@ -8,6 +8,11 @@ class UsersController < ApplicationController
         user.save
         render json: UsersSerializer.new(user)   
     end
+
+    def kill_rejects
+
+    end
+
     private 
     def user_params
         params.require(:user).permit(:name)
