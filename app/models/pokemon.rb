@@ -230,7 +230,8 @@ class Pokemon < ApplicationRecord
             defense: defense,
             special_attack: special_attack,
             special_defense: special_defense,
-            speed: speed
+            speed: speed,
+            alive: true
         )
     end
 
@@ -268,7 +269,8 @@ class Pokemon < ApplicationRecord
             defense: defense,
             special_attack: special_attack,
             special_defense: special_defense,
-            speed: speed
+            speed: speed,
+            alive: true
         )
     end
 

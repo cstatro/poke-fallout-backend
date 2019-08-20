@@ -4,4 +4,8 @@ class User < ApplicationRecord
     def pokemon_capacity
         self.facility_tier * 2
     end
+
+    def living_pokemon
+        self.pokemons.select{|poke| poke.alive}
+    end
 end
