@@ -232,7 +232,9 @@ class Pokemon < ApplicationRecord
             special_attack: special_attack,
             special_defense: special_defense,
             speed: speed,
-            alive: true
+            alive: true,
+            current_hp: hp,
+            nourishment: 50
         )
     end
 
@@ -271,7 +273,9 @@ class Pokemon < ApplicationRecord
             special_attack: special_attack,
             special_defense: special_defense,
             speed: speed,
-            alive: true
+            alive: true,
+            current_hp: hp,
+            nourishment: 50
         )
     end
 
@@ -312,7 +316,7 @@ class Pokemon < ApplicationRecord
         father = Pokemon.all.select{|poke, index| poke.gender == "male"}.sample
         puts father.image_url
         puts father.level
-        new = self.breed(mother, father, 1)
+        new = self.breed(mother, father, 5)
         puts new.image_url
         puts new.level
     end
