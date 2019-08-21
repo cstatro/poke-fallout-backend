@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 2019_08_21_164718) do
+ActiveRecord::Schema.define(version: 2019_08_21_172414) do
 
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
@@ -48,6 +48,7 @@ ActiveRecord::Schema.define(version: 2019_08_21_164718) do
     t.integer "facility_tier", default: 1
     t.integer "authority", default: 100
     t.integer "facility_cleanliness", default: 100
+    t.integer "food", default: 100
   end
 
   create_table "wildmons", force: :cascade do |t|
