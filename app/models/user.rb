@@ -9,4 +9,11 @@ class User < ApplicationRecord
     def living_pokemon
         self.pokemons.select{|poke| poke.alive}
     end
+
+
+    
+
+
+
+
 end

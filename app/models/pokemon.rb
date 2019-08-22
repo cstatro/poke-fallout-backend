@@ -75,8 +75,6 @@ class Pokemon < ApplicationRecord
         else
             rate_number = 1
         end
-
-
         
         {
             name: pokemon_call.species.name,
@@ -213,7 +211,7 @@ class Pokemon < ApplicationRecord
         response = HTTParty.get("https://pokemon.alexonsager.net/#{face_id}/#{body_id}")
         data = Nokogiri::HTML(response)
 
-        self.create(
+        newbie = self.create(
             level: level,
             name: data.css("#pk_name").text,
             image_url: data.css("#pk_img").attr("src"),
@@ -236,6 +234,7 @@ class Pokemon < ApplicationRecord
             current_hp: hp,
             nourishment: 50
         )
+        newbie
     end
 
 
@@ -281,24 +280,6 @@ class Pokemon < ApplicationRecord
 
 
 
-    def self.generate_wild(habitat, level, number, user_id)
-        possible = Wildmon.inhabitants_by_level(habitat, level)
-        capture_total = possible.inject(0.0){|total, value| total + value.capture_rate}
-
-        choices = []
-
-        (number * 2).times do
-            rando = rand
-            incrementor = 0
-            choices << possible.find do |inhabitant|
-                incrementor += inhabitant.capture_rate/capture_total
-                rando <= incrementor
-            end.species_id
-        end
-
-        choices.each_slice(2).map {|pair| self.generate(pair[0], pair[1], level, user_id)}
-
-    end
 
     def self.generate_starters(user_id)
         others = Wildmon.inhabitants_by_level("grassland", 5)
@@ -320,6 +301,51 @@ class Pokemon < ApplicationRecord
         puts new.image_url
         puts new.level
     end
+
+
+    
+
+
+    def collect_food_for(user)
+        user.update(food: user.food + self.speed)
+    end
+
+
+    def food_baseline
+        5 + (self.level / 5) 
+    end
+
+    def update_nourishment(food)
+        ratio = (food - self.food_baseline)/self.food_baseline.to_f
+        final = [[ratio * 15, 0.0].max.ceil, 100].min
+        self.update(nourishment: final)
+    end
+
+    def eat_lots(user)
+        eaten = [self.food_baseline * 2, user.food].min
+        user.update(food: user.food - eaten)
+        update_nourishment(eaten)
+    end
+
+    def eat_normal(user)
+        eaten = [self.food_baseline, user.food].min
+        user.update(food: user.food - eaten)
+        update_nourishment(eaten)
+    end
+
+    def eat_little(user)
+        eaten = [self.food_baseline / 2, user.food].min
+        user.update(food: user.food - eaten)
+        update_nourishment(eaten)
+    end
+
+
+    
+    def self.generate_caught_pokemon
+
+    end
+
+
 
 
 
