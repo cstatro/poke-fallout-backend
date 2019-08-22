@@ -1,5 +1,6 @@
 class User < ApplicationRecord
     has_many :pokemons
+    has_many :notifications
     validates :name, uniqueness: true
 
     def pokemon_capacity

@@ -35,9 +35,9 @@ class UsersController < ApplicationController
 
     def process_turn
 
-        notifications = []
-
         user = User.find(params[:id])
+
+        user.notifications.each{|note| note.destroy}
 
        
 
@@ -63,7 +63,8 @@ class UsersController < ApplicationController
 
         
         if user.facility_cleanliness < 20
-            notifications << "Your facilities are disgusting."
+
+            Notification.create(text: "Your facilities are disgusting.", user_id: user.id)
             mess_factor = (20 - user.facility_cleanliness) / 4 # Used in loyalty calc below
         else
             mess_factor = 0
@@ -79,7 +80,7 @@ class UsersController < ApplicationController
         pokemon.filter{|poke| poke[:food_policy] == 0}.each{|poke| poke[:stored_object].update_nourishment(0)}
 
         if user.food < poke_count * 5
-            notifications << "You're dangerously low on food."
+            Notification.create(text: "You're dangerously low on food.", user_id: user.id) 
         end
 
 
@@ -89,7 +90,7 @@ class UsersController < ApplicationController
                 updated_hp = [[poke[:stored_object].current_hp - 10 + poke[:stored_object].nourishment, 0].max, poke[:stored_object].hp].min
                 
                 poke[:stored_object].update(current_hp: updated_hp)
-                notifications << "#{poke[:stored_object].name} is dangerously hungry." 
+                Notification.create(text: "#{poke[:stored_object].name} is dangerously hungry." , user_id: user.id)
             end
         end
 
@@ -139,7 +140,8 @@ class UsersController < ApplicationController
 
                     if damage > 0
                         poke[:stored_object].update(current_hp: poke[:stored_object].current_hp - damage)
-                        notifications << "#{poke[:stored_object].name} took #{damage} damage while exploring."
+                        Notification.create(text: "#{poke[:stored_object].name} took #{damage} damage while exploring.", user_id: user.id)
+                        
                     end
                     
 
@@ -154,7 +156,7 @@ class UsersController < ApplicationController
                     if catch_rate > rando
                         poke_count += 1
                         newbie = Pokemon.generate(opp[:head_id], opp[:body_id], level, params[:id])
-                        notifications << "You caught a lv. #{level} #{newbie.name}."
+                        Notification.create(text: "You caught a lv. #{level} #{newbie.name}.", user_id: user.id)
                     end
 
                 end
@@ -189,7 +191,7 @@ class UsersController < ApplicationController
                     if rand > 0.7
                         poke_count += 1
                         newborn = Pokemon.breed(ordered[0], ordered[1], params[:id])
-                        notifications << "Your #{ordered[0][:stored_object].name} and #{ordered[1][:stored_object].name} sucessfully bred. You now have a lv. #{newborn.level} #{newborn.name}."
+                        Notification.create(text: "Your #{ordered[0][:stored_object].name} and #{ordered[1][:stored_object].name} sucessfully bred. You now have a lv. #{newborn.level} #{newborn.name}.", user_id: user.id)
                     end
                 end
             end
@@ -203,7 +205,7 @@ class UsersController < ApplicationController
         pokemon.each do |poke|
             if poke[:stored_object].current_hp <= 0
                 poke[:stored_object].alive = false
-                notifications << "Your #{poke[:stored_object].name} died."
+                Notification.create(text: "Your #{poke[:stored_object].name} died.", user_id: user.id)
                 death_count += 1
             end
         end
@@ -236,12 +238,7 @@ class UsersController < ApplicationController
 
 
         
-        options = {}
-
-        options[:notifications] = notifications
-
-
-        render json: UsersSerializer.new(user, options)
+        render json: UsersSerializer.new(user)
     end
 
 
