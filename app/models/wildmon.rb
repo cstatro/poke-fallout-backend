@@ -1,7 +1,7 @@
 class Wildmon < ApplicationRecord
 
 
-    @@habitats = ["cave", "forest", "grassland", "mountain", "rare", "rough-terrain", "sea", "urban", "waters-edge"]
+    
 
 
 

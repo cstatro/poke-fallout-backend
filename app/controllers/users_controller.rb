@@ -35,20 +35,11 @@ class UsersController < ApplicationController
 
     def process_turn
 
-        # Data Requirements:
-            # id (from path)
-            # cleanliness
-            # authority
-            # tier
-            #Pokemon Array, each has:
-                # id
-                # activity: "Food Collection", "Exploring", "Idle", "Breeding"
-                # food_policy: 3, 2, 1, 0
-                # exploration_destination (optional)
-
         notifications = []
 
         user = User.find(params[:id])
+
+       
 
         # Update User Stats
 
@@ -57,6 +48,8 @@ class UsersController < ApplicationController
         user.update(facility_cleanliness: params[:facility_cleanliness])
         
         capacity = user.facility_tier * 2
+
+        
 
         # This attaches the database pokemon object to the incoming data:
         pokemon = params[:pokemons].map do |data|
@@ -76,7 +69,7 @@ class UsersController < ApplicationController
         end
 
         # Update Food collected
-        pokemon.filter{|poke| poke[:activity] == "Food Collection"}.each{|poke| poke[:stored_object].collect_food_for(user)}
+        pokemon.filter{|poke| poke[:activity] == "Training"}.each{|poke| poke[:stored_object].collect_food_for(user)}
 
         # Update Hunger
         pokemon.filter{|poke| poke[:food_policy] == 3}.shuffle.each{|poke| poke[:stored_object].eat_lots(user)}
@@ -98,12 +91,19 @@ class UsersController < ApplicationController
                 notifications << "#{poke[:stored_object].name} is dangerously hungry." 
             end
         end
+
+        puts poke_count
+        puts capacity
         
+        puts poke_count < capacity
 
         if poke_count < capacity
 
+            puts pokemon[0]
+
             # Process exploration
             explorers = pokemon.filter{|poke| poke[:activity] == "Exploring"}
+            puts explorers
 
             explorers.each do |poke|
 
@@ -123,6 +123,11 @@ class UsersController < ApplicationController
                     opp = Wildmon.random_wild_data(location, level)
 
                     stats = Wildmon.check_stats(opp[:head_id], opp[:body_id], level)
+
+                    puts stats[:attack]
+                    puts stats[:defense]
+                    puts poke[:stored_object].attack
+                    puts poke[:stored_object].defense
 
 
                     # Chance for damage
@@ -228,10 +233,12 @@ class UsersController < ApplicationController
 
         user.update(authority: user.authority + authority_accumulator.ceil)
 
+
         
         options = {}
 
         options[:notifications] = notifications
+
 
         render json: UsersSerializer.new(user, options)
     end

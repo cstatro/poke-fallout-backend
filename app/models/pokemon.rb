@@ -1,5 +1,7 @@
 class Pokemon < ApplicationRecord
 
+    @@habitats = ["cave", "forest", "grassland", "mountain", "rough-terrain", "sea", "urban", "waters-edge"]
+
     belongs_to :mother, class_name: "Pokemon", optional: true
     belongs_to :father, class_name: "Pokemon", optional: true
     belongs_to :user 
@@ -282,7 +284,10 @@ class Pokemon < ApplicationRecord
 
 
     def self.generate_starters(user_id)
-        others = Wildmon.inhabitants_by_level("grassland", 5)
+
+        loc = @@habitats.sample
+
+        others = Wildmon.inhabitants_by_level(loc, 5)
         grass = [1, others.sample.species_id].shuffle
         fire = [4, others.sample.species_id].shuffle
         water = [7, others.sample.species_id].shuffle
