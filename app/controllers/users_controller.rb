@@ -45,7 +45,6 @@ class UsersController < ApplicationController
 
         user.update(facility_tier: params[:facility_tier])
         user.update(authority: params[:authority])
-        user.update(facility_cleanliness: params[:facility_cleanliness])
         
         capacity = user.facility_tier * 2
 
@@ -59,6 +58,8 @@ class UsersController < ApplicationController
 
 
         poke_count = pokemon.length
+
+        user.update(facility_cleanliness: params[:facility_cleanliness] - poke_count)
 
         
         if user.facility_cleanliness < 20
