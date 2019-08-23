@@ -313,6 +313,7 @@ class Pokemon < ApplicationRecord
 
     def collect_food_for(user)
         user.update(food: user.food + self.speed)
+        puts "GETTING FOOD"
     end
 
 

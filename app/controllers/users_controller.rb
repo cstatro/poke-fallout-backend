@@ -48,11 +48,11 @@ class UsersController < ApplicationController
         
         capacity = user.facility_tier * 2
 
-        
-
         # This attaches the database pokemon object to the incoming data:
         pokemon = params[:pokemons].map do |data|
             data[:stored_object] = Pokemon.find(data[:id])
+            data[:stored_object].update(food_policy: data[:food_policy])
+            data[:stored_object].update(current_action: data[:current_action])
             data
         end
 
@@ -71,7 +71,7 @@ class UsersController < ApplicationController
         end
 
         # Update Food collected
-        pokemon.filter{|poke| poke[:activity] == "Training"}.each{|poke| poke[:stored_object].collect_food_for(user)}
+        pokemon.filter{|poke| poke[:current_action] == "Training"}.each{|poke| poke[:stored_object].collect_food_for(user)}
 
         # Update Hunger
         pokemon.filter{|poke| poke[:food_policy] == 3}.shuffle.each{|poke| poke[:stored_object].eat_lots(user)}
@@ -94,24 +94,21 @@ class UsersController < ApplicationController
             end
         end
 
-        puts poke_count
-        puts capacity
-        
-        puts poke_count < capacity
-
         if poke_count < capacity
 
             puts pokemon[0]
 
             # Process exploration
-            explorers = pokemon.filter{|poke| poke[:activity] == "Exploring"}
+            explorers = pokemon.filter{|poke| poke[:current_action] == "Exploring"}
             puts explorers
 
             explorers.each do |poke|
 
+                puts "EXPLORING"
+
                 if poke_count < capacity
 
-                    location = "grassland"
+                    location = ["cave", "forest", "grassland", "mountain", "rough-terrain", "sea", "urban", "waters-edge"].sample
 
                     # Slight cost to loyalty per explore
 
@@ -168,7 +165,9 @@ class UsersController < ApplicationController
 
         # Process Idle
 
-        pokemon.filter{|poke| poke[:activity] == "Idle"}.each do |poke|
+        pokemon.filter{|poke| poke[:current_action] == "Idle"}.each do |poke|
+
+            puts "IDLE"
 
             obj = poke[:stored_object]
             
@@ -182,11 +181,12 @@ class UsersController < ApplicationController
 
         if poke_count < capacity
 
-            gender_sorted = pokemon.filter{|poke| poke[:activity] == "Breeding"}.partition{|poke| poke[:stored_object].gender == "male"}.sort_by{|ar| ar.length}
+            gender_sorted = pokemon.filter{|poke| poke[:current_action] == "Breeding"}.partition{|poke| poke[:stored_object].gender == "male"}.sort_by{|ar| ar.length}
 
             gender_sorted[0].zip(gender_sorted[1]).each do |pair|
 
                 if poke_count < capacity
+                    puts "BREEDING"
                     ordered = pair.sort_by{|poke| -poke.gender.length}
                     if rand > 0.7
                         poke_count += 1
