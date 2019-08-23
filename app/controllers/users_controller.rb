@@ -12,6 +12,7 @@ class UsersController < ApplicationController
     def create
         user = User.new(user_params)
         user.name = user.name.downcase
+        user.update(facility_tier: 4)
         user.save
         render json: UsersSerializer.new(user)   
     end
@@ -72,7 +73,7 @@ class UsersController < ApplicationController
         end
 
         # Update Food collected
-        pokemon.filter{|poke| poke[:current_action] == "Training"}.each{|poke| poke[:stored_object].collect_food_for(user)}
+        pokemon.filter{|poke| poke[:current_action] == "Farming"}.each{|poke| poke[:stored_object].collect_food_for(user)}
 
         # Update Hunger
         pokemon.filter{|poke| poke[:food_policy] == 3}.each{|poke| poke[:stored_object].eat_lots(user)}
