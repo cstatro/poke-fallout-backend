@@ -81,6 +81,10 @@ class UsersController < ApplicationController
         pokemon.filter{|poke| poke[:food_policy] == 1}.each{|poke| poke[:stored_object].eat_little(user)}
         pokemon.filter{|poke| poke[:food_policy] == 0}.each{|poke| poke[:stored_object].update_nourishment(0)}
 
+        # Rot
+
+        user.update(food: user.food - (user.food / 10)  )
+
         if user.food < poke_count * 5
             Notification.create(text: "You're dangerously low on food.", user_id: user.id) 
         end
@@ -137,11 +141,15 @@ class UsersController < ApplicationController
                     
                     damage_base = [level + stats[:attack] - poke[:stored_object].defense, 0].max
 
-                    damage = [(damage_base.to_f / poke[:stored_object].defense) * 10, 40.0].min.ceil
+                    puts (damage_base.to_f / poke[:stored_object].defense) * 10 
 
-                    if damage > 0
+                    damage_ratio = [(damage_base.to_f / poke[:stored_object].defense) * 10 , 0.25].min
 
-                        poke[:stored_object].update(current_hp: poke[:stored_object].current_hp - damage)
+                    damage = (poke[:stored_object].hp  * damage_ratio).ceil
+
+                    if damage_ratio > 0
+
+                        poke[:stored_object].update(current_hp: poke[:stored_object].current_hp - (poke[:stored_object].hp  * damage_ratio).ceil)
                         Notification.create(text: "#{poke[:stored_object].name} took #{damage} damage while exploring.", user_id: user.id)
                         
                     end
@@ -149,9 +157,9 @@ class UsersController < ApplicationController
 
                     # Chance for capture
 
-                    catch_base = [4 * poke[:stored_object].level + poke[:stored_object].attack - stats[:defense], 0].max
+                    catch_base = [8 * poke[:stored_object].level + poke[:stored_object].attack - stats[:defense], 0].max
 
-                    catch_rate = ([[5,     (catch_base.to_f / stats[:defense]) * 10    ].max, 100].min)/100.0
+                    catch_rate = ([[10,     (catch_base.to_f / stats[:defense]) * 10    ].max, 100].min)/100.0
 
                     
 
@@ -181,10 +189,10 @@ class UsersController < ApplicationController
 
             obj = poke[:stored_object]
             
-            obj.update(loyalty: [obj.loyalty + 2, 100].min)
+            obj.update(loyalty: [obj.loyalty + 5, 100].min)
 
             if obj.current_hp > 0
-                obj.update(current_hp: [obj.current_hp + (2 * obj.hp / 100.0).ceil, obj.hp].min)
+                obj.update(current_hp: [obj.current_hp + (15 * obj.hp / 100.0).ceil, obj.hp].min)
             end
 
         end
@@ -248,7 +256,7 @@ class UsersController < ApplicationController
 
         end
 
-        user.update(authority: user.authority + authority_accumulator.ceil)
+        user.update(authority: ((user.authority + authority_accumulator)* 0.95).ceil)
 
 
         
