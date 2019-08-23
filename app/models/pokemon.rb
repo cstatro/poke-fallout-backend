@@ -150,11 +150,11 @@ class Pokemon < ApplicationRecord
             loyalty_factor = 0
         end
 
-        mother_1 = self.X_parents(1, mother)
+        mother_1 = [mother].concat(self.X_parents(1, mother))
         mother_2 = mother_1.concat(self.X_parents(2, mother))
         mother_3 = mother_2.concat(self.X_parents(3, mother))
 
-        father_1 = self.X_parents(1, father)
+        father_1 = [father].concat(self.X_parents(1, father))
         father_2 = father_1.concat(self.X_parents(2, father))
         father_3 = father_2.concat(self.X_parents(3, father))
 
@@ -323,7 +323,8 @@ class Pokemon < ApplicationRecord
 
     def update_nourishment(food)
         ratio = (food - self.food_baseline)/self.food_baseline.to_f
-        final = [[ratio * 15, 0.0].max.ceil, 100].min
+
+        final = [[ self.nourishment + (ratio * 15), 0].max, 100].min
         self.update(nourishment: final)
     end
 
@@ -345,11 +346,6 @@ class Pokemon < ApplicationRecord
         update_nourishment(eaten)
     end
 
-
-    
-    def self.generate_caught_pokemon
-
-    end
 
 
 

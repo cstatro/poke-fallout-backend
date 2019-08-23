@@ -38,8 +38,8 @@ class Wildmon < ApplicationRecord
         head = PokeApi.get(pokemon: head_id)
         body =  PokeApi.get(pokemon: body_id)
 
-        attack = ((head["stats"][4]["base_stat"] + body["stats"][4]["base_stat"]) * level / 100) + 5
-        defense = ((head["stats"][3]["base_stat"] + body["stats"][3]["base_stat"]) * level / 100) + 5
+        attack = ((head.stats[4].base_stat + body.stats[4].base_stat) * level / 100) + 5
+        defense = ((head.stats[3].base_stat + body.stats[3].base_stat) * level / 100) + 5
 
         {attack: attack, defense: defense}
 

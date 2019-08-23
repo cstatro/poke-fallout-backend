@@ -39,6 +39,7 @@ class UsersController < ApplicationController
 
         user.notifications.each{|note| note.destroy}
 
+
        
 
         # Update User Stats
@@ -74,9 +75,9 @@ class UsersController < ApplicationController
         pokemon.filter{|poke| poke[:current_action] == "Training"}.each{|poke| poke[:stored_object].collect_food_for(user)}
 
         # Update Hunger
-        pokemon.filter{|poke| poke[:food_policy] == 3}.shuffle.each{|poke| poke[:stored_object].eat_lots(user)}
-        pokemon.filter{|poke| poke[:food_policy] == 2}.shuffle.each{|poke| poke[:stored_object].eat_normal(user)}
-        pokemon.filter{|poke| poke[:food_policy] == 1}.shuffle.each{|poke| poke[:stored_object].eat_little(user)}
+        pokemon.filter{|poke| poke[:food_policy] == 3}.each{|poke| poke[:stored_object].eat_lots(user)}
+        pokemon.filter{|poke| poke[:food_policy] == 2}.each{|poke| poke[:stored_object].eat_normal(user)}
+        pokemon.filter{|poke| poke[:food_policy] == 1}.each{|poke| poke[:stored_object].eat_little(user)}
         pokemon.filter{|poke| poke[:food_policy] == 0}.each{|poke| poke[:stored_object].update_nourishment(0)}
 
         if user.food < poke_count * 5
@@ -86,21 +87,19 @@ class UsersController < ApplicationController
 
         # Hunger Consequences
         pokemon.each do |poke|
-            if poke[:stored_object].nourishment < 10
-                updated_hp = [[poke[:stored_object].current_hp - 10 + poke[:stored_object].nourishment, 0].max, poke[:stored_object].hp].min
-                
+            if poke[:stored_object].nourishment < 20
+                updated_hp = [[poke[:stored_object].current_hp - 20 + poke[:stored_object].nourishment, 0].max, poke[:stored_object].hp].min
                 poke[:stored_object].update(current_hp: updated_hp)
                 Notification.create(text: "#{poke[:stored_object].name} is dangerously hungry." , user_id: user.id)
             end
         end
 
+
+
+        # Process exploration
         if poke_count < capacity
 
-            puts pokemon[0]
-
-            # Process exploration
             explorers = pokemon.filter{|poke| poke[:current_action] == "Exploring"}
-            puts explorers
 
             explorers.each do |poke|
 
@@ -112,9 +111,13 @@ class UsersController < ApplicationController
 
                     # Slight cost to loyalty per explore
 
-                    poke[:stored_object].update(loyalty: [poke[:stored_object].loyalty - 2, 0].min)
+                    poke[:stored_object].update(loyalty: [poke[:stored_object].loyalty - 4, 0].max)
 
-                    level = poke[:stored_object].level
+                    # add 1, 0, -1, or -2
+
+                    spread = (rand * 4).floor - 1
+
+                    level = [poke[:stored_object].level - spread, 1].max
 
 
                     # Get wild combination
@@ -131,11 +134,12 @@ class UsersController < ApplicationController
 
                     # Chance for damage
                     
-                    damage_base = [stats[:attack] - poke[:stored_object].defense, 0].max
+                    damage_base = [level + stats[:attack] - poke[:stored_object].defense, 0].max
 
                     damage = [(damage_base.to_f / poke[:stored_object].defense) * 10, 40.0].min.ceil
 
                     if damage > 0
+
                         poke[:stored_object].update(current_hp: poke[:stored_object].current_hp - damage)
                         Notification.create(text: "#{poke[:stored_object].name} took #{damage} damage while exploring.", user_id: user.id)
                         
@@ -144,11 +148,16 @@ class UsersController < ApplicationController
 
                     # Chance for capture
 
-                    catch_base = [poke[:stored_object].attack - opp[:defense], 0].max
+                    catch_base = [4 * poke[:stored_object].level + poke[:stored_object].attack - stats[:defense], 0].max
 
-                    catch_rate = ([[5, (catch_base.to_f / stats[:defense]) * 10].max, 100].min)/100.0
+                    catch_rate = ([[5,     (catch_base.to_f / stats[:defense]) * 10    ].max, 100].min)/100.0
+
+                    
 
                     rando = rand
+
+                    puts rando
+                    puts catch_rate
 
                     if catch_rate > rando
                         poke_count += 1
@@ -173,7 +182,9 @@ class UsersController < ApplicationController
             
             obj.update(loyalty: [obj.loyalty + 2, 100].min)
 
-            obj.update(current_hp: [obj.current_hp + (2 * obj.hp / 100.0).ceil, obj.hp].min)
+            if obj.current_hp > 0
+                obj.update(current_hp: [obj.current_hp + (2 * obj.hp / 100.0).ceil, obj.hp].min)
+            end
 
         end
 
@@ -187,10 +198,12 @@ class UsersController < ApplicationController
 
                 if poke_count < capacity
                     puts "BREEDING"
-                    ordered = pair.sort_by{|poke| -poke.gender.length}
-                    if rand > 0.7
+                    ordered = pair.sort_by{|poke| poke[:stored_object].gender.length}
+                    rando = rand
+                    puts rando
+                    if rando > 0.8
                         poke_count += 1
-                        newborn = Pokemon.breed(ordered[0], ordered[1], params[:id])
+                        newborn = Pokemon.breed(ordered[0][:stored_object], ordered[1][:stored_object], params[:id])
                         Notification.create(text: "Your #{ordered[0][:stored_object].name} and #{ordered[1][:stored_object].name} sucessfully bred. You now have a lv. #{newborn.level} #{newborn.name}.", user_id: user.id)
                     end
                 end
@@ -226,9 +239,9 @@ class UsersController < ApplicationController
 
             death_factor = death_count * 4
 
-            loyalty_change = 2 - damage_factor - death_factor - mess_factor
+            loyalty_change = 0 - damage_factor - death_factor - mess_factor
 
-            obj.update(loyalty: [obj.loyalty + loyalty_change, 100].min)
+            obj.update(loyalty: [[obj.loyalty + loyalty_change, 100].min, 0].max)
 
             authority_accumulator += obj.level * obj.loyalty / 100.0
 

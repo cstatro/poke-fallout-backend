@@ -8,7 +8,7 @@
 
 Pokemon.destroy_all
 User.destroy_all 
-ash = User.create(name:"ash")
+ash = User.create(name:"ash", facility_tier: 10)
 User.create(name:"brock")
 
 Pokemon.generate_starters(ash.id)
