@@ -1,24 +1,5 @@
-# README
+# Pokemon Fallout API
 
-This README would normally document whatever steps are necessary to get the
-application up and running.
+A Rails API serving data for Pokemon Fallout.
 
-Things you may want to cover:
-
-* Ruby version
-
-* System dependencies
-
-* Configuration
-
-* Database creation
-
-* Database initialization
-
-* How to run the test suite
-
-* Services (job queues, cache servers, search engines, etc.)
-
-* Deployment instructions
-
-* ...
+Find out more at the [repo](https://github.com/cstatro/poke-fallout-frontend) for the project's frontend.
