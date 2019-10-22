@@ -210,7 +210,7 @@ class UsersController < ApplicationController
                     ordered = pair.sort_by{|poke| poke[:stored_object].gender.length}
                     rando = rand
                     puts rando
-                    if rando > 0.8
+                    if rando > 0.6
                         poke_count += 1
                         newborn = Pokemon.breed(ordered[0][:stored_object], ordered[1][:stored_object], params[:id])
                         Notification.create(text: "Your #{ordered[0][:stored_object].name} and #{ordered[1][:stored_object].name} sucessfully bred. You now have a lv. #{newborn.level} #{newborn.name}.", user_id: user.id)

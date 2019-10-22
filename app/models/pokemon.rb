@@ -179,6 +179,8 @@ class Pokemon < ApplicationRecord
 
         evolutions = face_info[:evolutions].select{|evo_datum| evo_datum[:level] <= level}
 
+        
+
         if evolutions.length > 0
             face_id = evolutions.sample[:to_id]
             face_info = self.speciesInfo(face_id)
@@ -189,6 +191,8 @@ class Pokemon < ApplicationRecord
         # Determine Body (accounting for possible evolution)
 
         evolutions = body_info[:evolutions].select{|evo_datum| evo_datum[:level] <= level}
+
+       
 
         if evolutions.length > 0
             body_id = evolutions.sample[:to_id]
@@ -276,7 +280,9 @@ class Pokemon < ApplicationRecord
             speed: speed,
             alive: true,
             current_hp: hp,
-            nourishment: 50
+            nourishment: 50,
+            current_action: "Idle",
+            food_policy: 1
         )
     end
 
